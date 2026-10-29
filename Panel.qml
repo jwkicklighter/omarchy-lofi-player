@@ -12,6 +12,9 @@ Panel {
   property var hostWidget: null
   property var strings: null
   property bool copied: false
+  property bool addOpen: false
+  property string addMessage: ""
+  property bool addFailed: false
 
   readonly property var host: hostWidget
   readonly property var barIdentity: hostWidget || root
@@ -31,7 +34,45 @@ Panel {
   }
 
   function open() { controller.show() }
-  function close() { controller.hide() }
+  function close() {
+    closeAdd()
+    root.addMessage = ""
+    controller.hide()
+  }
+
+  function openAdd() {
+    root.addOpen = true
+    root.addMessage = ""
+    root.addFailed = false
+    Qt.callLater(function() { addField.forceActiveFocus() })
+  }
+
+  function closeAdd() {
+    if (!root.addOpen) return
+    root.addOpen = false
+    addField.text = ""
+    Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+  }
+
+  function submitAdd() {
+    if (!root.host || root.host.addingChannel || addField.text.trim() === "") return
+    root.addMessage = ""
+    root.addFailed = false
+    root.host.addChannel(addField.text)
+  }
+
+  Connections {
+    target: root.host
+    function onChannelAdded(ok, message) {
+      root.addMessage = message
+      root.addFailed = !ok
+      if (ok) {
+        root.closeAdd()
+        addMessageTimer.restart()
+      }
+      else Qt.callLater(function() { addField.selectAll(); addField.forceActiveFocus() })
+    }
+  }
 
   function closeForPopoutSwitch() {
     popoutSwitchClosing = true
@@ -48,6 +89,12 @@ Panel {
     if (host) host.copyInstallCommand()
     root.copied = true
     copiedTimer.restart()
+  }
+
+  Timer {
+    id: addMessageTimer
+    interval: 4000
+    onTriggered: if (!root.addFailed) root.addMessage = ""
   }
 
   Timer {
@@ -76,6 +123,7 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
+      blocked: addField.activeFocus
       onCloseRequested: root.close()
       onTabRequested: function(direction) {
         if (root.bar && typeof root.bar.switchPanelFrom === "function")
@@ -100,6 +148,22 @@ Panel {
           }
 
           PanelActionButton {
+            id: addButton
+            anchors.right: refreshButton.left
+            anchors.rightMargin: Style.spacing.xxs
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.installed
+            iconText: root.addOpen ? "󰅖" : "󰐕"
+            tooltipText: root.addOpen ? root.t("add.cancel") : root.t("add.open")
+            foreground: root.foregroundColor
+            hoverColor: root.accentColor
+            fontFamily: root.fontFamily
+            fontSize: Style.font.subtitle
+            size: Style.space(26)
+            onClicked: root.addOpen ? root.closeAdd() : root.openAdd()
+          }
+
+          PanelActionButton {
             id: refreshButton
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -119,6 +183,82 @@ Panel {
         PanelSeparator {
           width: parent.width
           foreground: root.foregroundColor
+        }
+
+        // --- add a channel ----------------------------------------------------
+
+        Column {
+          width: parent.width
+          spacing: Style.spacing.controlGap
+          visible: root.installed && (root.addOpen || root.addMessage !== "")
+
+          PanelSectionHeader {
+            visible: root.addOpen
+            text: root.t("add.header")
+            foreground: root.foregroundColor
+            fontFamily: root.fontFamily
+          }
+
+          Row {
+            width: parent.width
+            spacing: Style.spacing.md
+            visible: root.addOpen
+
+            TextField {
+              id: addField
+              width: parent.width - addSubmit.width - parent.spacing
+              anchors.verticalCenter: parent.verticalCenter
+              enabled: !!root.host && !root.host.addingChannel
+              placeholderText: root.t("add.placeholder")
+              foreground: root.foregroundColor
+              accent: root.accentColor
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.bodySmall
+              onTextChanged: if (root.addFailed) root.addMessage = ""
+
+              Keys.onPressed: function(event) {
+                if (event.key === Qt.Key_Escape) {
+                  root.closeAdd()
+                  event.accepted = true
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                  root.submitAdd()
+                  event.accepted = true
+                }
+              }
+            }
+
+            Button {
+              id: addSubmit
+              anchors.verticalCenter: parent.verticalCenter
+              iconText: "󰐕"
+              text: root.host && root.host.addingChannel ? root.t("add.adding") : root.t("add.submit")
+              enabled: !!root.host && !root.host.addingChannel && addField.text.trim() !== ""
+              foreground: root.foregroundColor
+              accent: root.accentColor
+              fontFamily: root.fontFamily
+              fontSize: Style.font.bodySmall
+              bordered: true
+              onClicked: root.submitAdd()
+            }
+          }
+
+          PlainText {
+            width: parent.width
+            visible: root.addOpen && root.addMessage === ""
+            text: root.host && root.host.addingChannel ? root.t("add.looking") : root.t("add.hint")
+            color: root.faintColor
+            font.pixelSize: Style.font.caption
+            wrapMode: Text.WordWrap
+          }
+
+          PlainText {
+            width: parent.width
+            visible: root.addMessage !== ""
+            text: root.addMessage
+            color: root.addFailed ? Color.urgent : root.mutedColor
+            font.pixelSize: Style.font.bodySmall
+            wrapMode: Text.WordWrap
+          }
         }
 
         // --- setup: lofi isn't installed --------------------------------------

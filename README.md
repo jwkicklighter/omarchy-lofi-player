@@ -5,6 +5,8 @@ the `lofi` script that streams YouTube live audio through mpv.
 
 - **Left-click** opens the player: play/pause, stop, favorite, volume, and the
   live streams from your channels (favorites first). Click a stream to play it.
+  The **+** button opens a field for adding a channel by `@handle`, channel URL,
+  or stream URL (it runs `lofi add`).
 - **Right-click** plays or pauses (resuming the last stream when stopped).
 - **Middle-click** stops.
 - **Scroll** changes volume by 5%.

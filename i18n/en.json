@@ -38,7 +38,16 @@
   "streams.favorites": "Favorites",
   "streams.loading": "Fetching live streams from your channels…",
   "streams.none": "None of your channels are live right now.",
-  "streams.hint": "Click a stream to play it. Add channels with lofi add @handle.",
+  "streams.hint": "Click a stream to play it. Add a channel with the + button.",
+
+  "add.open": "Add a channel",
+  "add.cancel": "Cancel",
+  "add.header": "ADD A CHANNEL",
+  "add.placeholder": "@handle, channel URL, or stream URL",
+  "add.submit": "Add",
+  "add.adding": "Adding…",
+  "add.hint": "Its live streams show up below once it's added.",
+  "add.looking": "Looking up the channel on YouTube…",
 
   "error.generic": "lofi %1 failed."
 }

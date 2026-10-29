@@ -35,11 +35,14 @@ BarWidget {
   property var streams: []
   property bool streamsLoaded: false
   property string streamsError: ""
+  property bool streamsStale: false
   readonly property bool streamsLoading: listProc.running
   property var favorites: []
   readonly property bool currentFavorite: root.title !== "" && root.favorites.indexOf(root.title) !== -1
 
   property string lastError: ""
+  readonly property bool addingChannel: addProc.running
+  signal channelAdded(bool ok, string message)
   property string pendingTitle: ""
   property var queue: []
 
@@ -95,6 +98,15 @@ BarWidget {
     if (!root.installed || favoritesProc.running) return
     favoritesProc.command = root.lofiCommand(["favorite", "list"])
     favoritesProc.running = true
+  }
+
+  // `lofi add` takes a channel URL, @handle, or a stream URL. It runs on its own
+  // process, since the yt-dlp lookup can take a few seconds.
+  function addChannel(what) {
+    var query = String(what || "").trim()
+    if (!root.installed || addProc.running || query === "") return
+    addProc.command = root.lofiCommand(["add", query])
+    addProc.running = true
   }
 
   function playPause() {
@@ -284,6 +296,22 @@ BarWidget {
   }
 
   Process {
+    id: addProc
+    command: []
+    stdout: StdioCollector { id: addOut; waitForEnd: true }
+    stderr: StdioCollector { id: addErr; waitForEnd: true }
+    onExited: function(exitCode) {
+      if (exitCode === 0) {
+        root.channelAdded(true, Model.lastLine(addOut.text))
+        if (listProc.running) root.streamsStale = true
+        else root.refreshStreams()
+      } else {
+        root.channelAdded(false, Model.lastLine(addErr.text) || strings.t("error.generic").arg("add"))
+      }
+    }
+  }
+
+  Process {
     id: listProc
     command: []
     stdout: StdioCollector { id: listOut; waitForEnd: true }
@@ -292,6 +320,10 @@ BarWidget {
       root.streams = exitCode === 0 ? Model.parseList(listOut.text) : []
       root.streamsError = exitCode === 0 ? "" : Model.lastLine(listErr.text)
       root.streamsLoaded = true
+      if (root.streamsStale) {
+        root.streamsStale = false
+        root.refreshStreams()
+      }
     }
   }
 
