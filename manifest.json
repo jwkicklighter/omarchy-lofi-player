@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "jwkicklighter.lofi-player",
+  "name": "Lofi player",
+  "version": "1.0.0",
+  "author": "Jordan Kicklighter",
+  "license": "MIT",
+  "description": "Bar widget for the lofi-player script: play, pause, stop, volume, favorites, and a picker for live streams from your channels. Offers to install lofi when it isn't on your PATH.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Lofi player",
+    "description": "Left-click opens the player, right-click plays or pauses, middle-click stops, scroll changes volume.",
+    "category": "Media",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "showVolume": false,
+      "refreshIntervalSec": 3
+    },
+    "schema": [
+      {
+        "key": "showVolume",
+        "type": "boolean",
+        "label": "Show volume next to the icon",
+        "defaultValue": false
+      },
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Status refresh interval (seconds)",
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "defaultValue": 3
+      }
+    ]
+  }
+}

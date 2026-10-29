@@ -1,0 +1,44 @@
+{
+  "bar.checking": "Looking for lofi…",
+  "bar.missing": "lofi-player isn't installed. Click to set it up.",
+  "bar.playing": "Playing: %1",
+  "bar.paused": "Paused: %1",
+  "bar.stopped": "lofi: stopped. Right-click to play.",
+
+  "panel.title": "Lofi Player",
+  "panel.refresh": "Refresh live streams",
+
+  "setup.heading": "The lofi command isn't on your PATH.",
+  "setup.verify": "If lofi-player is already installed, make sure the folder that holds it is on the PATH your session starts with, then check again. Otherwise, install it with the command below, or let the plugin install it for you.",
+  "setup.commandHeader": "INSTALL COMMAND",
+  "setup.copy": "Copy",
+  "setup.copied": "Copied",
+  "setup.copyTooltip": "Copy the install command to the clipboard",
+  "setup.terminalHint": "Paste it into a terminal. It installs mpv, yt-dlp, socat, and jq if they're missing, then puts lofi in ~/.local/bin.",
+  "setup.install": "Install for me",
+  "setup.installing": "Installing…",
+  "setup.checkAgain": "Check again",
+  "setup.installHint": "Install for me opens a terminal that runs the same command. It may ask for your password to install packages.",
+  "setup.waiting": "Finish the installer in the terminal. This panel switches to the player once lofi is found.",
+
+  "player.playing": "NOW PLAYING",
+  "player.paused": "PAUSED",
+  "player.stopped": "STOPPED",
+  "player.nothing": "Nothing played yet. Pick a stream below.",
+  "player.resumeHint": "Last played. Press Play to resume it.",
+  "player.starting": "Starting stream…",
+  "player.play": "Play",
+  "player.pause": "Pause",
+  "player.resume": "Resume",
+  "player.stop": "Stop",
+  "player.favorite": "Favorite",
+  "player.unfavorite": "Favorited",
+
+  "streams.header": "LIVE STREAMS",
+  "streams.favorites": "Favorites",
+  "streams.loading": "Fetching live streams from your channels…",
+  "streams.none": "None of your channels are live right now.",
+  "streams.hint": "Click a stream to play it. Add channels with lofi add @handle.",
+
+  "error.generic": "lofi %1 failed."
+}
