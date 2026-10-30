@@ -1,0 +1,29 @@
+name: Retry marketplace update
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag (must be the current master HEAD)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: marketplace-update
+  cancel-in-progress: false
+
+jobs:
+  request:
+    if: vars.MARKETPLACE_SUBMITTED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Request marketplace verification of an existing release
+        run: python3 tools/marketplace.py --tag "$RELEASE_TAG"
+        env:
+          GH_TOKEN: ${{ secrets.MARKETPLACE_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
