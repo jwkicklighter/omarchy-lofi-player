@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to test
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: commits, manifest, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Check commit messages
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        shell: bash
+        run: |
+          invalid=0
+          pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._/-]+\))?(!)?:[[:space:]].+'
+
+          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+            echo "Invalid Conventional Commit PR title: $PR_TITLE"
+            invalid=1
+          fi
+
+          while IFS= read -r subject; do
+            if [[ ! "$subject" =~ $pattern ]]; then
+              echo "Invalid Conventional Commit subject: $subject"
+              invalid=1
+            fi
+          done < <(git log --format=%s "$BASE_SHA..$HEAD_SHA")
+          exit "$invalid"
+
+      - name: Check manifest and release versions match
+        run: |
+          manifest=$(jq -r .version manifest.json)
+          release=$(jq -r '."."' .release-please-manifest.json)
+          echo "manifest.json: $manifest, release-please: $release, version.txt: $(cat version.txt)"
+          test "$manifest" = "$release" && test "$manifest" = "$(cat version.txt)"
+
+      - name: Check required marketplace files
+        run: |
+          for f in manifest.json README.md LICENSE preview.png; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Test
+        run: node tests/model.test.js
